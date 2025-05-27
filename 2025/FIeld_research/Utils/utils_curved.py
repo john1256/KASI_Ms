@@ -43,8 +43,9 @@ def B(func, parm,z):
     return Bval
 
 def A(func,mb, dmb,z, parm):
-    ndata = mb.size
-    A = 1/ndata*np.sum(dmb**2)*np.sum((mb - B(func,parm,z))/(dmb**2))
+#    ndata = mb.size
+    inv_dmb = np.sum(1/dmb**2)
+    A = 1/inv_dmb*np.sum((mb - B(func,parm,z))/(dmb**2))
     return A
 
 # 1. make a code that accounts for a prior
@@ -59,7 +60,7 @@ def Loglikelihood(func, parm,SNdata): # return Loglikelihood = -chisq, parm[0] =
     m_z = A(func, mb,dmb, z, parm) + B(func, parm, z) # m_z = A + B(Omegam, Omegalamb)
     diff = (mb - m_z)**2
     chisq = np.sum(diff/dmb**2)
-    return -chisq
+    return -chisq/2
 
 def ln_f(func, parm,SNdata, prior, lnprior): # return total Loglikelihood
     bool = np.all((prior[0] <= parm) & (parm <= prior[1]))

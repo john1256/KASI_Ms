@@ -13,12 +13,14 @@ def E_inverse_flat(z, Omega_m): # return 1/E(z) = H0/H(z)
 
 
 def Other_stuff_flat(z, parm): # parm[0] = Omegam, parm[1] = Omegalamb
+    """
+    Other_stuff_flat(z, parm) = integral from 0 to z of 1/E(z) dz
+    Other_stuff_flat(z, parm) = H0/c*D_M(z)"""
     Omegam = parm[0]
     grid = np.linspace(z.min(), z.max(), 100)
     grid_dist = np.array([quad_vec(E_inverse_flat, 0,n, args=(Omegam))[0] for n in grid])
     interp_func = interp1d(grid, grid_dist, kind='linear', fill_value='extrapolate')
     integral = interp_func(z)
-    
     return integral
 def B(func, parm,z):
     """
@@ -35,8 +37,9 @@ def B(func, parm,z):
     return Bval
 
 def A(func,mb, dmb,z, parm):
-    ndata = mb.size
-    A = 1/ndata*np.sum(dmb**2)*np.sum((mb - B(func,parm,z))/(dmb**2))
+#    ndata = mb.size
+    inv_dmb = np.sum(1/dmb**2)
+    A = 1/inv_dmb*np.sum((mb - B(func,parm,z))/(dmb**2))
     return A
 # 1. make a code that accounts for a prior
 def ln_prior(min,max):
@@ -50,7 +53,7 @@ def Loglikelihood(func, parm,SNdata): # return Loglikelihood = -chisq, parm[0] =
     m_z = A(func, mb,dmb, z, parm) + B(func, parm, z) # m_z = A + B(Omegam, Omegalamb)
     diff = (mb - m_z)**2
     chisq = np.sum(diff/dmb**2)
-    return -chisq
+    return -chisq/2
 
 def ln_f(func, parm,SNdata, prior, lnprior): # return total Loglikelihood
     bool = np.all((prior[0] <= parm) & (parm <= prior[1]))
