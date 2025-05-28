@@ -8,12 +8,9 @@ from tqdm import tqdm
 def E_inverse_curved(z, Omega_m, Omega_L): # return 1/E(z) = H0/H(z)
     Omegak = 1 - Omega_m - Omega_L
     E2 = Omega_m*(1+z)**3 + Omega_L + Omegak*(1+z)**2
-    if np.isscalar(E2):
-        if E2 >= 0:
-            E = E2 ** 0.5
-        else:
-            E = np.nan
-    E = np.where(E2 >= 0, E2**0.5, np.nan)
+    if E2 <0:
+        E2=np.nan
+    E = np.sqrt(E2)
     return 1/E
 
 
@@ -70,11 +67,11 @@ def D_V_curved(z,parm):
     c = 299792.458 # speed of light in km/s
     Omegam, Omegalamb, H0 = parm
     D_M = D_M_curved(z, parm)
-    E_z = E_inverse_curved(z, Omegam, Omegalamb)
+    E_z = np.array([E_inverse_curved(zval, Omegam, Omegalamb) for zval in z])
     D_V = (c*z/H0*(D_M**2)/E_z)**(1/3)
     return D_V
 def z_eq(parm):
-    Omegam, Omegalamb, H0 = parm
+    Omegam, _, H0 = parm
     h = H0/100 # dimensionless Hubble constant
     return Omegam*h**2/(1.48*10**-6)
 def R_eq(z_eq):
@@ -94,7 +91,7 @@ def r_dfid(parm):
     output : r_dfid
     """
     c = 299792.458 # speed of light in km/s
-    Omegam, Omegalamb,H0 = parm
+    Omegam, _,H0 = parm
     z_eq_val = z_eq(parm)
     R_eq_val = R_eq(z_eq_val)
     R_rec_val = R_rec(z_eq_val)
@@ -129,7 +126,8 @@ def BAO_curved(BAO_data, parm): # return y for BAO data
     # type 4 : H(r_d/r_dfid)
     ind4 = np.where(ind_BAO == 4)
     z4 = z_BAO[ind4]
-    H_val = 1/E_inverse_curved(z4, parm[0], parm[1]) * parm[2] # 1/E(z) = H0/H(z) -> H(z) = H0*E(z)
+    E_inverse_arr= np.array([E_inverse_curved(zval, parm[0], parm[1]) for zval in z4])
+    H_val = 1/E_inverse_arr * parm[2] # 1/E(z) = H0/H(z) -> H(z) = H0*E(z)
     result[ind4] = H_val*(r_d/r_dfid_val)
     return result
 
