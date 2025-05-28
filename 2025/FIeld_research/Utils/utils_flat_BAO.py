@@ -8,12 +8,9 @@ from tqdm import tqdm
 def E_inverse_flat(z, Omega_m): # return 1/E(z) = H0/H(z)
     Omega_L = 1 - Omega_m
     E2 = Omega_m*(1+z)**3 + Omega_L
-    if np.isscalar(E2):
-        if E2 >= 0:
-            E = E2 ** 0.5
-        else:
-            E = np.nan
-    E = np.where(E2 >= 0, E2**0.5, np.nan)
+    if E2 <0:
+        E2=np.nan
+    E = np.sqrt(E2)
     return 1/E
 
 
@@ -56,7 +53,7 @@ def D_V_flat(z,parm):
     c = 299792.458 # speed of light in km/s
     Omegam, H0 = parm # H0 is the marginalized parameter
     D_M = D_M_flat(z, parm)
-    E_z = E_inverse_flat(z, Omegam)
+    E_z = np.array([E_inverse_flat(zval, Omegam) for zval in z])
     D_V = (c*z/H0*D_M**2/E_z)**(1/3)
     return D_V
 def z_eq(parm):
@@ -115,7 +112,8 @@ def BAO_flat(BAO_data, parm): # return y for BAO data
     # type 4 : H(r_d/r_dfid)
     ind4 = np.where(ind_BAO == 4)
     z4 = z_BAO[ind4]
-    H_val = 1/E_inverse_flat(z4, parm[0]) * parm[1] # 1/E(z) = H0/H(z) -> H(z) = H0*E(z)
+    E_inverse_arr =  np.array([E_inverse_flat(zval, parm[0]) for zval in z4])
+    H_val = 1/E_inverse_arr * parm[1] # 1/E(z) = H0/H(z) -> H(z) = H0*E(z)
     result[ind4] = H_val*(r_d/r_dfid_val)
     return result
 
