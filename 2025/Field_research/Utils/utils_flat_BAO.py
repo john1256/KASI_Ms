@@ -8,7 +8,7 @@ from tqdm import tqdm
 def E_inverse_flat(z, Omega_m): # return 1/E(z) = H0/H(z)
     Omega_L = 1 - Omega_m
     E2 = Omega_m*(1+z)**3 + Omega_L
-    if E2 <0:
+    if (E2 <0).any():
         E2=np.nan
     E = np.sqrt(E2)
     return 1/E
@@ -49,14 +49,14 @@ def D_M_flat(z, parm): # return D_M(z) = c/H0*Other_stuff_flat
     c = 299792.458 # speed of light in km/s
     D_M = c/H0*np.array([quad_vec(E_inverse_flat, 0,zval, args=(Omegam))[0] for zval in z])
     return D_M
-def D_V_flat(z,parm):
+def D_V_flat(z,parm): # parm = [Omegam, H0]
     c = 299792.458 # speed of light in km/s
     Omegam, H0 = parm # H0 is the marginalized parameter
     D_M = D_M_flat(z, parm)
     E_z = np.array([E_inverse_flat(zval, Omegam) for zval in z])
     D_V = (c*z/H0*D_M**2/E_z)**(1/3)
     return D_V
-def z_eq(parm):
+def z_eq(parm): # parm = [Omegam, H0]
     Omegam, H0 = parm
     h = H0/100 # dimensionless Hubble constant
     return Omegam*h**2/(1.48*10**-6)
@@ -70,7 +70,7 @@ def R_rec(z_eq):
     R_rec = 3/4*f*z_eq/(1+z_rec)
     return R_rec
 
-def r_dfid(parm):
+def r_dfid(parm): # parm = [Omegam, H0]
     """
     r_dfid = r_d(z_eq) = sound horizon at the drag epoch
     input : parm = [Omegam, H0]
@@ -88,7 +88,7 @@ def r_dfid(parm):
     )
     return r_dfid_val
 
-def BAO_flat(BAO_data, parm): # return y for BAO data
+def BAO_flat(BAO_data, parm): # return y for BAO data, parm = [Omegam, H0]
     z_BAO = BAO_data['z'].values
     ind_BAO = BAO_data['ind'].values
     r_dfid_val = r_dfid(parm)

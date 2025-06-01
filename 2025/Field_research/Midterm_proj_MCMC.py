@@ -61,21 +61,22 @@ def run_mcmc_flat_SNBAO(seed):
     nstep = int(2e5)
     return utils_flat_BAO.MCMC_BAO(utils_flat_BAO.Other_stuff_flat, utils_flat_BAO.BAO_flat, paraminit, sndata,BAO_data, nstep, normal_vec, Prior2)
 
-"""
+
 # curved
 def run_mcmc_curved_SNBAO(seed):
     np.random.seed(seed)
-    Prior2 = np.array([[0., 0., 0.],[2.5, 2.5, 36.39070654]])
-    std = np.array([0., 0., 0.57213598])
-    normal_vec = np.array([0.0003, 0.11904393, 0.]) * 0.5
-    paraminit = np.array([0.9999742233029345, 22.850391597263012, 1]) + np.random.normal(0,std)
-    nstep = int(2e5)
+    Prior2 = np.array([[0.,0., 4.66594018],[20,3, 35.39070654]])
+    std = np.array([0.2096627, 0.0, 2.945705])
+    normal_vec = np.array([0.5, 0.1, 2])*0.15
+    paraminit = np.array([11,  0.1,11]) + np.random.normal(0,std)
+    nstep = int(1.5*1e5)
     return utils_curved_BAO.MCMC_BAO(utils_curved_BAO.Other_stuff_curved, utils_curved_BAO.BAO_curved, paraminit, sndata,BAO_data, nstep, normal_vec, Prior2)
-"""
+
 
 # execution    
 n_chain = 4
 # SN flat
+"""
 with mp.Pool(processes=n_chain) as pool:
     results1 = pool.map(run_mcmc_flat_SN, range(n_chain))
 for i in range(n_chain):
@@ -91,11 +92,10 @@ with mp.Pool(processes=n_chain) as pool:
     results3 = pool.map(run_mcmc_flat_SNBAO, range(n_chain))
 for i in range(n_chain):
     np.save(f'./2025/Field_research/Results/MCMC_flat_SN+BAO_{i}.npy', results3[i])
-
 """
+print("Running MCMC for SN + BAO curved...")
 # SN + BAO curved
 with mp.Pool(processes=n_chain) as pool:
     results4 = pool.map(run_mcmc_curved_SNBAO, range(n_chain))
 for i in range(n_chain):
     np.save(f'./2025/Field_research/Results/MCMC_curved_SN+BAO_{i}.npy', results4[i])
-"""

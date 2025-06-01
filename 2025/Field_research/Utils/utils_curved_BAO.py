@@ -10,7 +10,7 @@ def E_inverse_curved(z, Omega_m, Omega_L): # return 1/E(z) = H0/H(z)
     E2 = Omega_m*(1+z)**3 + Omega_L + Omegak*(1+z)**2
     if E2 <0:
         E2=np.nan
-    E = np.sqrt(E2)
+    E = np.sqrt(E2) 
     return 1/E
 
 

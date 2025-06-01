@@ -7,7 +7,7 @@ from tqdm import tqdm
 def E_inverse_curved(z, Omega_m, Omegalamb): # return 1/E(z) = H0/H(z)
     Omegak = 1 - Omega_m-Omegalamb
     E2 = Omega_m*(1+z)**3 + Omegalamb + Omegak*(1+z)**2
-    if E2 <0:
+    if (E2 <0).any():
         E2=np.nan
     E = np.sqrt(E2)
     return 1/E
@@ -39,7 +39,7 @@ def B(func, parm,z):
     output :
         Bval : B(Omegam, Omegalamb)
     """
-    Bval = 5*np.log10((1+z)*func(z, parm))
+    Bval = 5*np.log10((1+z)*func(z,parm))
     return Bval
 
 def A(func,mb, dmb,z, parm):

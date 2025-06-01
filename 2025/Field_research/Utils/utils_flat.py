@@ -6,7 +6,7 @@ from tqdm import tqdm
 def E_inverse_flat(z, Omega_m): # return 1/E(z) = H0/H(z)
     Omega_L = 1 - Omega_m
     E2 = Omega_m*(1+z)**3 + Omega_L
-    if E2 <0:
+    if (E2<0).any():
         E2=np.nan
     E = np.sqrt(E2)
     return 1/E
