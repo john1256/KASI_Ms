@@ -53,8 +53,8 @@ def D_V_flat(z,parm): # parm = [Omegam, H0]
     c = 299792.458 # speed of light in km/s
     Omegam, H0 = parm # H0 is the marginalized parameter
     D_M = D_M_flat(z, parm)
-    E_z = np.array([E_inverse_flat(zval, Omegam) for zval in z])
-    D_V = (c*z/H0*D_M**2/E_z)**(1/3)
+    E_inv = np.array([E_inverse_flat(zval, Omegam) for zval in z])
+    D_V = (c*z/H0*D_M**2*E_inv)**(1/3)
     return D_V
 def z_eq(parm): # parm = [Omegam, H0]
     Omegam, H0 = parm

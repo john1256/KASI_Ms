@@ -8,7 +8,7 @@ from tqdm import tqdm
 def E_inverse_curved(z, Omega_m, Omega_L): # return 1/E(z) = H0/H(z)
     Omegak = 1 - Omega_m - Omega_L
     E2 = Omega_m*(1+z)**3 + Omega_L + Omegak*(1+z)**2
-    if E2 <0:
+    if (E2 <0).any():
         E2=np.nan
     E = np.sqrt(E2) 
     return 1/E
@@ -67,8 +67,8 @@ def D_V_curved(z,parm):
     c = 299792.458 # speed of light in km/s
     Omegam, Omegalamb, H0 = parm
     D_M = D_M_curved(z, parm)
-    E_z = np.array([E_inverse_curved(zval, Omegam, Omegalamb) for zval in z])
-    D_V = (c*z/H0*(D_M**2)/E_z)**(1/3)
+    E_inv = np.array([E_inverse_curved(zval, Omegam, Omegalamb) for zval in z])
+    D_V = (c*z/H0*(D_M**2)*E_inv)**(1/3)
     return D_V
 def z_eq(parm):
     Omegam, _, H0 = parm
