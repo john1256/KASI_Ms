@@ -74,14 +74,14 @@ def z_eq(parm):
     Omegam, _, H0 = parm
     h = H0/100 # dimensionless Hubble constant
     return Omegam*h**2/(1.48*10**-6)
-def R_eq(z_eq):
-    f = 0.167 # baryonic fraction
-    R_eq = 3/4*f*z_eq/(1+z_eq)
+def R_eq():
+    f = 0.1543  # baryonic fraction
+    R_eq = 3/4*f
     return R_eq
 def R_rec(z_eq):
-    f = 0.167 # baryonic fraction
-    z_rec = 2784
-    R_rec = 3/4*f*z_eq/(1+z_rec)
+    f = 0.1543  # baryonic fraction
+    z_rec = 2426.3839
+    R_rec = 3/4*f*(1+z_eq)/(1+z_rec)
     return R_rec
 
 def r_dfid(parm):
@@ -93,7 +93,7 @@ def r_dfid(parm):
     c = 299792.458 # speed of light in km/s
     Omegam, _,H0 = parm
     z_eq_val = z_eq(parm)
-    R_eq_val = R_eq(z_eq_val)
+    R_eq_val = R_eq()
     R_rec_val = R_rec(z_eq_val)
     
     r_dfid_val = (
@@ -106,7 +106,7 @@ def BAO_curved(BAO_data, parm): # return y for BAO data
     z_BAO = BAO_data['z'].values
     ind_BAO = BAO_data['ind'].values
     r_dfid_val = r_dfid(parm)
-    r_d = 101.19 # Mpc
+    r_d = 103.16 # Mpc
     result = np.zeros(z_BAO.size)
     # type 1 : r_d/D_V
     ind1 = np.where(ind_BAO == 1)
