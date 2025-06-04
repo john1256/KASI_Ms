@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import nestle
 import corner
 import sys
+import pickle
 sys.path.append('./Utils')
 import utils_nested as un
 
@@ -10,14 +11,17 @@ import utils_nested as un
 # 1. SN only data
 # 1-1. flat cosmology
 print("Sampling SN flat cosmology...")
-result_SN_flat = nestle.sample(un.Loglikelihood_SN_flat, un.prior_SN_flat, 1, method='single', npoints=200)
-np.save()
+result_SN_flat = nestle.sample(un.Loglikelihood_SN_flat, un.prior_SN_flat, 1, method='single', npoints=200, callback = nestle.print_progress)
+# saving the result
+print("Saving SN flat cosmology result...")
+with open('Results/SN_flat_result.pkl', 'wb') as f:
+    pickle.dump(result_SN_flat, f)
 p, cov = nestle.mean_and_cov(result_SN_flat.samples, result_SN_flat.weights)
 
 with open('Results/SN_flat_result.txt', 'w') as f:
     f.write(result_SN_flat.summary())
     f.write(f'\nlogzerr : {result_SN_flat.logzerr}')
-    f.write(f'\n Best-fit paramters : Omegam = {p[0]:.3f} +/- {np.sqrt(cov[0,0]):.3f}, H0 = {p[1]:.3f} +/- {np.sqrt(cov[1,1]):.3f}')
+    f.write(f'\n Best-fit paramters : Omegam = {p[0]:.3f} +/- {np.sqrt(cov[0,0]):.3f}')
 
 fig = corner.corner(result_SN_flat.samples, weights=result_SN_flat.weights, labels=[r'$\Omega_m$'],
                     quantiles=[0.16, 0.5, 0.84], range = [0.99999], bins=30, show_titles=True)
@@ -27,7 +31,11 @@ fig.savefig('./Figs/SN_flat_corner.png', dpi=300)
 
 # 1-2. curved cosmology
 print("Sampling SN curved cosmology...")
-result_SN_curved = nestle.sample(un.Loglikelihood_SN_curved, un.prior_SN_curved, 2, method='single', npoints=200)
+result_SN_curved = nestle.sample(un.Loglikelihood_SN_curved, un.prior_SN_curved, 2, method='single', npoints=200, callback = nestle.print_progress)
+# saving the result
+print("Saving SN curved cosmology result...")
+with open('Results/SN_curved_result.pkl', 'wb') as f:
+    pickle.dump(result_SN_curved, f)
 p, cov = nestle.mean_and_cov(result_SN_curved.samples, result_SN_curved.weights)
 with open('Results/SN_curved_result.txt', 'w') as f:
     f.write(result_SN_curved.summary())
@@ -43,7 +51,11 @@ fig2.savefig('./Figs/SN_curved_corner.png', dpi=300)
 # 2. SN + BAO data
 # 2-1. flat cosmology
 print("Sampling SN + BAO flat cosmology...")
-result_SN_BAO_flat = nestle.sample(un.Loglikelihood_SN_BAO_flat, un.prior_SN_BAO_flat, 2, method='single', npoints=200)
+result_SN_BAO_flat = nestle.sample(un.Loglikelihood_SN_BAO_flat, un.prior_SN_BAO_flat, 2, method='single', npoints=200, callback = nestle.print_progress)
+# saving the result
+print("Saving SN + BAO flat cosmology result...")
+with open('Results/SN_BAO_flat_result.pkl', 'wb') as f:
+    pickle.dump(result_SN_BAO_flat, f)
 p, cov = nestle.mean_and_cov(result_SN_BAO_flat.samples, result_SN_BAO_flat.weights)
 with open('Results/SN_BAO_flat_result.txt', 'w') as f:
     f.write(result_SN_BAO_flat.summary())
@@ -57,7 +69,11 @@ fig3.savefig('./Figs/SN_BAO_flat_corner.png', dpi=300)
 
 # 2-2. curved cosmology
 print("Sampling SN + BAO curved cosmology...")
-result_SN_BAO_curved = nestle.sample(un.Loglikelihood_SN_BAO_curved, un.prior_SN_BAO_curved, 3, method='single', npoints=200)
+result_SN_BAO_curved = nestle.sample(un.Loglikelihood_SN_BAO_curved, un.prior_SN_BAO_curved, 3, method='single', npoints=200, callback = nestle.print_progress)
+# saving the result
+print("Saving SN + BAO curved cosmology result...")
+with open('Results/SN_BAO_curved_result.pkl', 'wb') as f:
+    pickle.dump(result_SN_BAO_curved, f)
 p, cov = nestle.mean_and_cov(result_SN_BAO_curved.samples, result_SN_BAO_curved.weights)
 with open('Results/SN_BAO_curved_result.txt', 'w') as f:
     f.write(result_SN_BAO_curved.summary())

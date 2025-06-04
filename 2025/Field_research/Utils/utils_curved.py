@@ -27,6 +27,8 @@ def Other_stuff_curved(z, parm): # parm[0] = Omegam, parm[1] = Omegalamb
         grid_dist = 1/np.sqrt(-Omegak)*np.sin(np.sqrt(-Omegak)*grid_Ez)
     interp_func = interp1d(grid, grid_dist, kind='linear', fill_value='extrapolate')
     integral = interp_func(z)
+    if (integral).any() <= 0:
+        integral = np.nan
     return integral
 def B(func, parm,z):
     """
