@@ -37,7 +37,6 @@ def B(func, parm,z):
     return Bval
 
 def A(func,mb, dmb,z, parm):
-#    ndata = mb.size
     inv_dmb = np.sum(1/dmb**2)
     A = 1/inv_dmb*np.sum((mb - B(func,parm,z))/(dmb**2))
     return A
