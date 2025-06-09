@@ -76,7 +76,7 @@ def run_mcmc_curved_SNBAO(seed):
 # execution    
 n_chain = 4
 # SN flat
-"""
+
 with mp.Pool(processes=n_chain) as pool:
     results1 = pool.map(run_mcmc_flat_SN, range(n_chain))
 for i in range(n_chain):
@@ -88,7 +88,7 @@ with mp.Pool(processes=n_chain) as pool:
     results2 = pool.map(run_mcmc_curved_SN, range(n_chain))
 for i in range(n_chain):
     np.save(f'./2025/Field_research/Results/MCMC_curved_SN_{i}.npy', results2[i])
-"""
+
 # SN + BAO flat
 print("Running MCMC for SN + BAO flat...")
 with mp.Pool(processes=n_chain) as pool:
