@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 import utils_flat as uf
 import utils_curved as uc
-import utils_flat_BAO as ufb
-import utils_curved_BAO as ucb
+import utils_flat_SNBAO as ufb
+import utils_curved_SNBAO as ucb
 import os
 
 

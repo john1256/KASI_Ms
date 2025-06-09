@@ -6,10 +6,10 @@ import sys
 import multiprocess as mp
 sys.path.append('./2025/Field_research/Utils')
 
-import utils_flat
-import utils_flat_BAO
-import utils_curved_BAO
-import utils_curved
+import utils_flat as uf
+import utils_flat_SNBAO as ufb
+import utils_curved_SNBAO as ucb
+import utils_curved as uc
 
 
 
@@ -30,6 +30,7 @@ BAO_data = pd.DataFrame({
 })
 
 # SN data
+
 # flat
 def run_mcmc_flat_SN(seed):
     np.random.seed(seed)
@@ -38,68 +39,72 @@ def run_mcmc_flat_SN(seed):
     std = np.array([0])*0.1
     paraminit = np.array([0.9999742233029345]) + np.random.normal(0,std)
     nstep = int(1e6)
-    return utils_flat.MCMC(utils_flat.Other_stuff_flat, paraminit, sndata, nstep, normal_vec, Prior1)
+    return uf.MCMC(uf.Other_stuff_flat, paraminit, sndata, nstep, normal_vec, Prior1)
 
 # curved
 def run_mcmc_curved_SN(seed):
     np.random.seed(seed)
-    Prior2 = np.array([[0., -3.],[20, 3.]])
-    std = np.array([0.07765663, 0.05880332])
+    Prior2 = np.array([[0., -3.],[20, 1.]])
+    std = np.array([0.7765663, 0.5880332])
     normal_vec = np.array([1., 0.2])
-    paraminit = np.array([3.5135883019039014,  0.002435561190052171]) + np.random.normal(0,std)
-    nstep = int(1e6)
-    return utils_curved.MCMC(utils_curved.Other_stuff_curved, paraminit, sndata, nstep, normal_vec, Prior2)
+    paraminit = np.array([3.1, 0. ]) + np.random.normal(0,std)
+    nstep = int(2*1e5)
+    return uc.MCMC(uc.Other_stuff_curved, paraminit, sndata, nstep, normal_vec, Prior2)
 
 # SN + BAO data
+
 # flat
 def run_mcmc_flat_SNBAO(seed):
     np.random.seed(seed)
     Prior2 = np.array([[0., 4.66594018],[1, 36.39070654]])
-    std = np.array([0., 0.57213598])
-    normal_vec = np.array([0.0003, 0.11904393])*0.5
-    paraminit = np.array([0.9999742233029345,  22.850391597263012]) + np.random.normal(0,std)
+    std = np.array([0.,  0.11162995])
+    normal_vec = np.array([0.0003614, 0.11162995])*2.
+    paraminit = np.array([0.9999742233029345,  31.689002893196257]) + np.random.normal(0,std)
     nstep = int(1.5*1e5)
-    return utils_flat_BAO.MCMC_BAO(utils_flat_BAO.Other_stuff_flat, utils_flat_BAO.BAO_flat, paraminit, sndata,BAO_data, nstep, normal_vec, Prior2)
-
+    return ufb.MCMC_BAO(ufb.Other_stuff_flat, ufb.BAO_flat, paraminit, sndata,BAO_data, nstep, normal_vec, Prior2)
 
 # curved
 def run_mcmc_curved_SNBAO(seed):
     np.random.seed(seed)
-    Prior2 = np.array([[0., -3., 4.66594018],[20, 3, 35.39070654]])
+    Prior2 = np.array([[0., -3., 4.66594018],[20, 1., 35.39070654]])
     std = np.array([0.2096627, 0.0, 2.945705])
     normal_vec = np.array([0.7, 0.1, 1])*0.5
     paraminit = np.array([3.5,  0.1,20]) + np.random.normal(0,std)
     nstep = int(1e5)
-    return utils_curved_BAO.MCMC_BAO(utils_curved_BAO.Other_stuff_curved, utils_curved_BAO.BAO_curved, paraminit, sndata,BAO_data, nstep, normal_vec, Prior2)
+    return ucb.MCMC_BAO(ucb.Other_stuff_curved, ucb.BAO_curved, paraminit, sndata,BAO_data, nstep, normal_vec, Prior2)
 
 
 # execution    
 n_chain = 4
 # SN flat
-
+"""
+print("Running MCMC for SN flat...")
 with mp.Pool(processes=n_chain) as pool:
     results1 = pool.map(run_mcmc_flat_SN, range(n_chain))
 for i in range(n_chain):
     np.save(f'./2025/Field_research/Results/MCMC_flat_SN_{i}.npy', results1[i])
-# SN curved
+"""
 
+# SN curved
 print("Running MCMC for SN curved...")
 with mp.Pool(processes=n_chain) as pool:
     results2 = pool.map(run_mcmc_curved_SN, range(n_chain))
 for i in range(n_chain):
     np.save(f'./2025/Field_research/Results/MCMC_curved_SN_{i}.npy', results2[i])
 
+"""
 # SN + BAO flat
 print("Running MCMC for SN + BAO flat...")
 with mp.Pool(processes=n_chain) as pool:
     results3 = pool.map(run_mcmc_flat_SNBAO, range(n_chain))
 for i in range(n_chain):
     np.save(f'./2025/Field_research/Results/MCMC_flat_SN+BAO_{i}.npy', results3[i])
-
-print("Running MCMC for SN + BAO curved...")
+"""
+"""
 # SN + BAO curved
+print("Running MCMC for SN + BAO curved...")
 with mp.Pool(processes=n_chain) as pool:
     results4 = pool.map(run_mcmc_curved_SNBAO, range(n_chain))
 for i in range(n_chain):
     np.save(f'./2025/Field_research/Results/MCMC_curved_SN+BAO_{i}.npy', results4[i])
-
+"""
