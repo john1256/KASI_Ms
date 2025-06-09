@@ -9,7 +9,7 @@ def E_inverse_flat(z, Omega_m): # return 1/E(z) = H0/H(z)
     Omega_L = 1 - Omega_m
     E2 = Omega_m*(1+z)**3 + Omega_L
     if (E2 <0).any():
-        E2=np.nan
+        return np.inf
     E = np.sqrt(E2)
     return 1/E
 
@@ -33,7 +33,10 @@ def B(func, parm,z):
     output :
         Bval : B(Omegam, Omegalamb)
     """
-    Bval = 5*np.log10((1+z)*func(z, parm))
+    funcval = func(z, parm) # proper distance*H0/c
+    if (funcval).any() <= 0:
+        return np.inf
+    Bval = 5*np.log10((1+z)*funcval)
     return Bval
 
 def A(func,mb, dmb,z, parm):

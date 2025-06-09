@@ -10,6 +10,7 @@ import utils_nested as un
 # plot results
 # 1. SN only data
 # 1-1. flat cosmology
+"""
 print("Sampling SN flat cosmology...")
 result_SN_flat = nestle.sample(un.Loglikelihood_SN_flat, un.prior_SN_flat, 1, method='single', npoints=200, callback = nestle.print_progress)
 # saving the result
@@ -66,10 +67,10 @@ fig3 = corner.corner(result_SN_BAO_flat.samples, weights=result_SN_BAO_flat.weig
 _ = fig3.suptitle('SN + BAO flat LCDM cosmology nested sampling result', fontsize=16)
 fig3.tight_layout()
 fig3.savefig('./Figs/SN_BAO_flat_corner.png', dpi=300)
-
+"""
 # 2-2. curved cosmology
 print("Sampling SN + BAO curved cosmology...")
-result_SN_BAO_curved = nestle.sample(un.Loglikelihood_SN_BAO_curved, un.prior_SN_BAO_curved, 3, method='single', npoints=200, callback = nestle.print_progress)
+result_SN_BAO_curved = nestle.sample(un.Loglikelihood_SN_BAO_curved, un.prior_SN_BAO_curved, 3, method='single', npoints=1000, callback = nestle.print_progress)
 # saving the result
 print("Saving SN + BAO curved cosmology result...")
 with open('Results/SN_BAO_curved_result.pkl', 'wb') as f:

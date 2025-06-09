@@ -8,7 +8,7 @@ def E_inverse_curved(z, Omega_m, Omegalamb): # return 1/E(z) = H0/H(z)
     Omegak = 1 - Omega_m-Omegalamb
     E2 = Omega_m*(1+z)**3 + Omegalamb + Omegak*(1+z)**2
     if (E2 <0).any():
-        E2=np.nan
+        return np.nan
     E = np.sqrt(E2)
     return 1/E
 
@@ -27,8 +27,6 @@ def Other_stuff_curved(z, parm): # parm[0] = Omegam, parm[1] = Omegalamb
         grid_dist = 1/np.sqrt(-Omegak)*np.sin(np.sqrt(-Omegak)*grid_Ez)
     interp_func = interp1d(grid, grid_dist, kind='linear', fill_value='extrapolate')
     integral = interp_func(z)
-    if (integral).any() <= 0:
-        integral = np.nan
     return integral
 def B(func, parm,z):
     """
@@ -41,7 +39,10 @@ def B(func, parm,z):
     output :
         Bval : B(Omegam, Omegalamb)
     """
-    Bval = 5*np.log10((1+z)*func(z,parm))
+    funcval = func(z, parm) # proper distance*H0/c
+    if (funcval).any() <= 0 or np.isnan(funcval).any():
+        funcval= np.nan
+    Bval = 5*np.log10((1+z)*funcval)
     return Bval
 
 def A(func,mb, dmb,z, parm):

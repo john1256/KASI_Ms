@@ -9,7 +9,7 @@ def E_inverse_curved(z, Omega_m, Omega_L): # return 1/E(z) = H0/H(z)
     Omegak = 1 - Omega_m - Omega_L
     E2 = Omega_m*(1+z)**3 + Omega_L + Omegak*(1+z)**2
     if (E2 <0).any():
-        E2=np.nan
+        return np.nan
     E = np.sqrt(E2) 
     return 1/E
 
@@ -41,13 +41,14 @@ def B(func, parm,z):
     output :
         Bval : B(Omegam, Omegalamb)
     """
-    Bval = 5*np.log10((1+z)*func(z, parm))
+    funcval = func(z, parm) # proper distance*H0/c
+    Bval = 5*np.log10((1+z)*funcval)
     return Bval
 
-def A(func,mb, dmb,z, parm):
+def A(mb, dmb,Bval):
 #    ndata = mb.size
     inv_dmb = np.sum(1/dmb**2)
-    A = 1/inv_dmb*np.sum((mb - B(func,parm,z))/(dmb**2))
+    A = 1/inv_dmb*np.sum((mb - Bval)/(dmb**2))
     return A
 
 # BAO analysis for flat universe
@@ -140,7 +141,12 @@ def SN_Loglikelihood(func, parm,SNdata): # return Loglikelihood = -chisq, parm[0
     mb = SNdata['mb'].values
     dmb = SNdata['dmb'].values
     z = SNdata['zcmb'].values
-    m_z = A(func, mb,dmb, z, parm) + B(func, parm, z) # m_z = A + B(Omegam, Omegalamb)
+    Bval = B(func, parm, z) # B(Omegam, Omegalamb)
+    if np.isnan(Bval).any():
+        print("Bval is NaN, returning -inf")
+        print(f"parm = {parm}")
+        return -np.inf
+    m_z = A(mb,dmb,Bval) + Bval # m_z = A + B(Omegam, Omegalamb)
     diff = (mb - m_z)**2
     chisq = np.sum(diff/dmb**2)
     return -chisq/2
