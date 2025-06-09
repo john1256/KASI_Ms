@@ -148,7 +148,7 @@ def ln_f(func_SN,func_BAO, parm,SNdata,BAOdata, prior, lnprior): # return total 
     else:
         return -np.inf
 
-def Markov_BAO(func_SN, func_BAO, paramk,paramkp1,SNdata,BAOdata, prior, lnprior):
+def Markov_SNBAO(func_SN, func_BAO, paramk,paramkp1,SNdata,BAOdata, prior, lnprior):
     minuschisqk = ln_f(func_SN, func_BAO, paramk, SNdata, BAOdata, prior, lnprior)
     minuschisqkp1 = ln_f(func_SN, func_BAO, paramkp1, SNdata, BAOdata, prior, lnprior)
     lnr = np.log(np.random.uniform(0.,1.))
@@ -160,7 +160,7 @@ def Markov_BAO(func_SN, func_BAO, paramk,paramkp1,SNdata,BAOdata, prior, lnprior
 #        print(f"param0 = {paramk}, paramkp1 = {paramkp1}, \n chisq0 = {minuschisqk}, chisqkp1 = {minuschisqkp1}, lnr = {lnr}, moved : False")
         return paramk, minuschisqk
 
-def MCMC_BAO(func_SN, func_BAO, paraminit,SNdata,BAOdata, nstep,normal_vec,prior): # param0 = [H0, Omegam, Omegalamb]
+def MCMC_SNBAO(func_SN, func_BAO, paraminit,SNdata,BAOdata, nstep,normal_vec,prior): # param0 = [H0, Omegam, Omegalamb]
     """_summary_
 
     Args:
@@ -182,7 +182,7 @@ def MCMC_BAO(func_SN, func_BAO, paraminit,SNdata,BAOdata, nstep,normal_vec,prior
     stepsize = normal_vec
     for k in tqdm(range(nstep)):
         paramkp1 = np.array(param0 + np.random.normal(0,stepsize))
-        param0, loglikelihood = Markov_BAO(func_SN, func_BAO, param0, paramkp1,SNdata,BAOdata, prior, lnprior) #loglikelihood = -chisq
+        param0, loglikelihood = Markov_SNBAO(func_SN, func_BAO, param0, paramkp1,SNdata,BAOdata, prior, lnprior) #loglikelihood = -chisq
         col = np.hstack((param0, loglikelihood))
         arr[:,k] = col
     return arr
