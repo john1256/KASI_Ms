@@ -2,7 +2,7 @@ import os
 import numpy as np
 CurrentPath = os.getcwd()
 print(CurrentPath)
-Filename = '2025/Field_research/Results/MCMC_flat_SN_0.npy'
-np.load(Filename)
+dir = os.path.dirname(__file__)
 print("Test completed successfully.")
-print(Filename)
+with open('./Results/hello.txt', 'w') as f:
+    f.write('Hello, world!')
