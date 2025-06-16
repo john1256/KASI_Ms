@@ -54,7 +54,7 @@ def Loglikelihood_BAO_flat(parm):
 def prior_BAO_flat(x):
     # Omegam in [0,1], H0 in [4.66594018, 36.39070654]
     # prior[0] = Omegam, prior[1] = H0
-    prior = x * np.array([1, 31.72476636]) + np.array([0, 4.66594018])
+    prior = x * np.array([1, 36.39070654 - 4.66594018]) + np.array([0, 4.66594018])
     return prior
 # 2-2. BAO curved cosmology
 #  Loglikelihood for BAO curved cosmology
@@ -62,8 +62,8 @@ def Loglikelihood_BAO_curved(parm):
     loglikelihood_BAO = ucb.BAO_loglikelihood(ucb.BAO_curved, parm, BAO_data)
     return loglikelihood_BAO
 def prior_BAO_curved(x):
-    # Omegam in [0,20], Omegalamb in [-3,1], H0 in [4.66594018, 35.39070654]
-    prior = x * np.array([20, 4, 35.39070654 - 4.66594018]) + np.array([0, -3, 4.66594018])
+    # Omegam in [0,20], Omegalamb in [-3,1], H0 in [4.66594018, 36.39070654]
+    prior = x * np.array([20, 4, 36.39070654 - 4.66594018]) + np.array([0, -3, 4.66594018])
     return prior
 
 # 3. SN + BAO
@@ -77,7 +77,7 @@ def Loglikelihood_SN_BAO_flat(parm):
 def prior_SN_BAO_flat(x):
     # Omegam in [0,1],H0 in [4.66594018, 36.39070654]
     # prior[0] = Omegam, prior[1] = H0
-    prior = x * np.array([1, 31.72476636]) + np.array([0, 4.66594018])
+    prior = x * np.array([1, 36.39070654 - 4.66594018]) + np.array([0, 4.66594018])
     return prior
 
 # 3-2. SN + BAO curved cosmology
@@ -88,6 +88,6 @@ def Loglikelihood_SN_BAO_curved(parm):
     return loglikelihood_SN + loglikelihood_BAO
 #   prior for SN + BAO curved cosmology
 def prior_SN_BAO_curved(x):
-    # Omegam in [0,20], Omegalamb in [-3,1], H0 in [4.66594018, 35.39070654]
-    prior = x * np.array([20, 4, 35.39070654 - 4.66594018]) + np.array([0, -3, 4.66594018])
+    # Omegam in [0,20], Omegalamb in [-3,1], H0 in [4.66594018, 36.39070654]
+    prior = x * np.array([20, 4, 36.39070654 - 4.66594018]) + np.array([0, -3, 4.66594018])
     return prior
