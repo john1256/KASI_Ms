@@ -2,8 +2,17 @@ from scipy.interpolate import interp1d
 import numpy as np
 from scipy.integrate import quad_vec
 from tqdm import tqdm
-
+import os
+import pandas as pd
+Field_research_path = os.path.dirname(os.path.dirname(__file__))
+# load dataset
+sndata = pd.read_csv(Field_research_path + '/Data/parsonage.txt', sep=' ', engine='python')
+BAO_data = pd.read_csv(Field_research_path + '/Data/BAO_data.csv')
+z = sndata['zcmb'].values
+mb = sndata['mb'].values
+dmb = sndata['dmb'].values
 # SN analysis for flat universe
+grid = np.linspace(z.min(), z.max(), 100)
 
 def E_inverse_curved(z, Omega_m, Omega_L): # return 1/E(z) = H0/H(z)
     Omegak = 1 - Omega_m - Omega_L
@@ -14,11 +23,10 @@ def E_inverse_curved(z, Omega_m, Omega_L): # return 1/E(z) = H0/H(z)
     return 1/E
 
 
-def Other_stuff_curved(z, parm): # parm[0] = Omegam, parm[1] = Omegalamb, d_p = c/H0*Other_stuff_flat
+def Other_stuff_curved(parm): # parm[0] = Omegam, parm[1] = Omegalamb, d_p = c/H0*Other_stuff_flat
     Omegam = parm[0]
     Omega_L = parm[1]
     Omegak = 1 - Omegam - Omega_L
-    grid = np.linspace(z.min(), z.max(), 100)
     gridval = np.array([quad_vec(E_inverse_curved, 0,n, args=(Omegam, Omega_L))[0] for n in grid])
     if np.abs(Omegak) < 1e-14: # flat universe
         grid_dist = gridval
@@ -30,7 +38,7 @@ def Other_stuff_curved(z, parm): # parm[0] = Omegam, parm[1] = Omegalamb, d_p = 
     integral = interp_func(z)
     return integral
 
-def B(func, parm,z):
+def B(func, parm):
     """
     B(Omegam, Omegalamb) = 5*log10((1+z)*proper distance*H0/c)
     m(z) = A + B(Omegam, Omegalamb)
@@ -41,7 +49,7 @@ def B(func, parm,z):
     output :
         Bval : B(Omegam, Omegalamb)
     """
-    funcval = func(z, parm) # proper distance*H0/c
+    funcval = func(parm) # proper distance*H0/c
     Bval = 5*np.log10((1+z)*funcval)
     return Bval
 
@@ -52,7 +60,7 @@ def A(mb, dmb,Bval):
     return A
 
 # BAO analysis for flat universe
-def D_M_curved(z, parm): # return D_M(z) = c/H0*Other_stuff_flat
+def D_M_curved(z,parm): # return D_M(z) = c/H0*Other_stuff_flat
     Omegam, Omegalamb, H0 = parm
     Omegak = 1 - Omegam - Omegalamb
     c = 299792.458 # speed of light in km/s
@@ -64,7 +72,7 @@ def D_M_curved(z, parm): # return D_M(z) = c/H0*Other_stuff_flat
     else: # closed universe
         D_M = 1/np.sqrt(-Omegak)*np.sin(np.sqrt(-Omegak)*integral)*c/H0
     return D_M
-def D_V_curved(z,parm):
+def D_V_curved(z, parm):
     c = 299792.458 # speed of light in km/s
     Omegam, Omegalamb, H0 = parm
     D_M = D_M_curved(z, parm)
@@ -103,7 +111,7 @@ def r_dfid(parm):
     )
     return r_dfid_val
 
-def BAO_curved(BAO_data, parm): # return y for BAO data
+def BAO_curved(parm): # return y for BAO data
     z_BAO = BAO_data['z'].values
     ind_BAO = BAO_data['ind'].values
     r_dfid_val = r_dfid(parm)
@@ -137,11 +145,8 @@ def ln_prior(min,max):
     volume = np.prod(np.abs(min - max)) # volume of the prior
     return np.log(1/volume)
 
-def SN_Loglikelihood(func, parm,SNdata): # return Loglikelihood = -chisq, parm[0] = H0, parm[1] = Omegam, parm[2] = Omegalamb
-    mb = SNdata['mb'].values
-    dmb = SNdata['dmb'].values
-    z = SNdata['zcmb'].values
-    Bval = B(func, parm, z) # B(Omegam, Omegalamb)
+def SN_Loglikelihood(func, parm): # return Loglikelihood = -chisq, parm[0] = H0, parm[1] = Omegam, parm[2] = Omegalamb
+    Bval = B(func, parm) # B(Omegam, Omegalamb)
     if np.isnan(Bval).any():
         print("Bval is NaN, returning -inf")
         print(f"parm = {parm}")
@@ -150,24 +155,24 @@ def SN_Loglikelihood(func, parm,SNdata): # return Loglikelihood = -chisq, parm[0
     diff = (mb - m_z)**2
     chisq = np.sum(diff/dmb**2)
     return -chisq/2
-def BAO_loglikelihood(func, parm, BAOdata): # return Loglikelihood = -chisq
-    err_BAO = BAOdata['err'].values
-    y0_BAO = BAOdata['val'].values
-    y_BAO = func(BAOdata, parm)
+def BAO_loglikelihood(func, parm): # return Loglikelihood = -chisq
+    y0_BAO = BAO_data['val'].values
+    err_BAO = BAO_data['err'].values
+    y_BAO = func(parm)
     diff = (y_BAO - y0_BAO)**2
     chisq = np.sum(diff/err_BAO**2)
     return -chisq/2
 
-def ln_f(func_SN,func_BAO, parm,SNdata,BAOdata, prior, lnprior): # return total Loglikelihood
+def ln_f(func_SN,func_BAO, parm, prior, lnprior): # return total Loglikelihood
     bool = np.all((prior[0] <= parm) & (parm <= prior[1])) # Prior : [[Omegam, H0],[Omegam, H0]]
     if bool == True:
-        return lnprior + SN_Loglikelihood(func_SN, parm[:2], SNdata) + BAO_loglikelihood(func_BAO, parm, BAOdata) # param[0] = Omegam, param[1] = H0 (Marginalized parameter)
+        return lnprior + SN_Loglikelihood(func_SN, parm[:2]) + BAO_loglikelihood(func_BAO, parm) # param[0] = Omegam, param[1] = H0 (Marginalized parameter)
     else:
         return -np.inf
 
-def Markov_SNBAO(func_SN, func_BAO, paramk,paramkp1,SNdata,BAOdata, prior, lnprior):
-    minuschisqk = ln_f(func_SN, func_BAO, paramk, SNdata, BAOdata, prior, lnprior)
-    minuschisqkp1 = ln_f(func_SN, func_BAO, paramkp1, SNdata, BAOdata, prior, lnprior)
+def Markov_SNBAO(func_SN, func_BAO, paramk,paramkp1, prior, lnprior):
+    minuschisqk = ln_f(func_SN, func_BAO, paramk, prior, lnprior)
+    minuschisqkp1 = ln_f(func_SN, func_BAO, paramkp1, prior, lnprior)
     lnr = np.log(np.random.uniform(0.,1.))
 
     if minuschisqkp1 - minuschisqk > lnr:
@@ -177,7 +182,7 @@ def Markov_SNBAO(func_SN, func_BAO, paramk,paramkp1,SNdata,BAOdata, prior, lnpri
 #        print(f"param0 = {paramk}, paramkp1 = {paramkp1}, \n chisq0 = {minuschisqk}, chisqkp1 = {minuschisqkp1}, lnr = {lnr}, moved : False")
         return paramk, minuschisqk
 
-def MCMC_SNBAO(func_SN, func_BAO, paraminit,SNdata,BAOdata, nstep,normal_vec,prior): # param0 = [H0, Omegam, Omegalamb]
+def MCMC_SNBAO(func_SN, func_BAO, paraminit, nstep,normal_vec,prior): # param0 = [H0, Omegam, Omegalamb]
     """_summary_
 
     Args:
@@ -199,7 +204,7 @@ def MCMC_SNBAO(func_SN, func_BAO, paraminit,SNdata,BAOdata, nstep,normal_vec,pri
     stepsize = normal_vec
     for k in tqdm(range(nstep)):
         paramkp1 = np.array(param0 + np.random.normal(0,stepsize))
-        param0, loglikelihood = Markov_SNBAO(func_SN, func_BAO, param0, paramkp1,SNdata,BAOdata, prior, lnprior) #loglikelihood = -chisq
+        param0, loglikelihood = Markov_SNBAO(func_SN, func_BAO, param0, paramkp1, prior, lnprior) #loglikelihood = -chisq
         col = np.hstack((param0, loglikelihood))
         arr[:,k] = col
     return arr
