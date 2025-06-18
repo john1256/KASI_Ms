@@ -5,20 +5,24 @@ from tqdm import tqdm
 import os
 import pandas as pd
 Field_research_path = os.path.dirname(os.path.dirname(__file__))
-# load dataset
+# load sn dataset
 sndata = pd.read_csv(Field_research_path + '/Data/parsonage.txt', sep=' ', engine='python')
-BAO_data = pd.read_csv(Field_research_path + '/Data/BAO_data.csv')
 z = sndata['zcmb'].values
 mb = sndata['mb'].values
 dmb = sndata['dmb'].values
+
+# load BAO dataset
+BAO_data = pd.read_csv(Field_research_path + '/Data/BAO_data.csv')
+z_BAO = BAO_data['z'].values
+ind_BAO = BAO_data['ind'].values
+y0_BAO = BAO_data['val'].values
+err_BAO = BAO_data['err'].values
 # SN analysis for flat universe
 grid = np.linspace(z.min(), z.max(), 100)
 
 def E_inverse_curved(z, Omega_m, Omega_L): # return 1/E(z) = H0/H(z)
     Omegak = 1 - Omega_m - Omega_L
     E2 = Omega_m*(1+z)**3 + Omega_L + Omegak*(1+z)**2
-    if (E2 <0).any():
-        return np.nan
     E = np.sqrt(E2) 
     return 1/E
 
@@ -112,8 +116,6 @@ def r_dfid(parm):
     return r_dfid_val
 
 def BAO_curved(parm): # return y for BAO data
-    z_BAO = BAO_data['z'].values
-    ind_BAO = BAO_data['ind'].values
     r_dfid_val = r_dfid(parm)
     r_d = 103.16 # Mpc
     result = np.zeros(z_BAO.size)
@@ -156,8 +158,7 @@ def SN_Loglikelihood(func, parm): # return Loglikelihood = -chisq, parm[0] = H0,
     chisq = np.sum(diff/dmb**2)
     return -chisq/2
 def BAO_loglikelihood(func, parm): # return Loglikelihood = -chisq
-    y0_BAO = BAO_data['val'].values
-    err_BAO = BAO_data['err'].values
+
     y_BAO = func(parm)
     diff = (y_BAO - y0_BAO)**2
     chisq = np.sum(diff/err_BAO**2)

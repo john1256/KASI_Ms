@@ -2,8 +2,18 @@ import numpy as np
 from scipy.integrate import quad_vec
 from tqdm import tqdm
 
-# SN analysis for flat universe
+# loading data
+import os
+import pandas as pd
+Field_research_path = os.path.dirname(os.path.dirname(__file__))
+BAO_data = pd.read_csv(Field_research_path + '/Data/BAO_data.csv')
+z_BAO = BAO_data['z'].values
+ind_BAO = BAO_data['ind'].values
+y0_BAO = BAO_data['val'].values
+err_BAO = BAO_data['err'].values
 
+
+# BAO analysis for flat universe
 def E_inverse_curved(z, Omega_m, Omega_L): # return 1/E(z) = H0/H(z)
     Omegak = 1 - Omega_m - Omega_L
     E2 = Omega_m*(1+z)**3 + Omega_L + Omegak*(1+z)**2
@@ -63,9 +73,7 @@ def r_dfid(parm):
     )
     return r_dfid_val
 
-def BAO_curved(BAO_data, parm): # return y for BAO data
-    z_BAO = BAO_data['z'].values
-    ind_BAO = BAO_data['ind'].values
+def BAO_curved(parm): # return y for BAO data
     r_dfid_val = r_dfid(parm)
     r_d = 103.16 # Mpc
     result = np.zeros(z_BAO.size)
@@ -97,24 +105,23 @@ def ln_prior(min,max):
     volume = np.prod(np.abs(min - max)) # volume of the prior
     return np.log(1/volume)
 
-def BAO_loglikelihood(func, parm, BAOdata): # return Loglikelihood = -chisq
-    err_BAO = BAOdata['err'].values
-    y0_BAO = BAOdata['val'].values
-    y_BAO = func(BAOdata, parm)
+def BAO_loglikelihood(func, parm): # return Loglikelihood = -chisq
+
+    y_BAO = func(parm)
     diff = (y_BAO - y0_BAO)**2
     chisq = np.sum(diff/err_BAO**2)
     return -chisq/2
 
-def ln_f(func_BAO, parm,BAOdata, prior, lnprior): # return total Loglikelihood
+def ln_f(func_BAO, parm, prior, lnprior): # return total Loglikelihood
     bool = np.all((prior[0] <= parm) & (parm <= prior[1])) # Prior : [[Omegam, H0],[Omegam, H0]]
     if bool == True:
-        return lnprior + BAO_loglikelihood(func_BAO, parm, BAOdata) # param[0] = Omegam, param[1] = H0 (Marginalized parameter)
+        return lnprior + BAO_loglikelihood(func_BAO, parm) # param[0] = Omegam, param[1] = H0 (Marginalized parameter)
     else:
         return -np.inf
     
-def Markov_BAO(func_BAO, paramk,paramkp1,BAOdata, prior, lnprior):
-    minuschisqk = ln_f(func_BAO, paramk, BAOdata, prior, lnprior)
-    minuschisqkp1 = ln_f(func_BAO, paramkp1, BAOdata, prior, lnprior)
+def Markov_BAO(func_BAO, paramk,paramkp1,prior, lnprior):
+    minuschisqk = ln_f(func_BAO, paramk, prior, lnprior)
+    minuschisqkp1 = ln_f(func_BAO, paramkp1, prior, lnprior)
     lnr = np.log(np.random.uniform(0.,1.))
 
     if minuschisqkp1 - minuschisqk > lnr:
@@ -124,13 +131,12 @@ def Markov_BAO(func_BAO, paramk,paramkp1,BAOdata, prior, lnprior):
 #        print(f"param0 = {paramk}, paramkp1 = {paramkp1}, \n chisq0 = {minuschisqk}, chisqkp1 = {minuschisqkp1}, lnr = {lnr}, moved : False")
         return paramk, minuschisqk
 
-def MCMC_BAO(func_BAO, paraminit,BAOdata, nstep,normal_vec,prior): # param0 = [H0, Omegam, Omegalamb]
+def MCMC_BAO(func_BAO, paraminit, nstep,normal_vec,prior): # param0 = [H0, Omegam, Omegalamb]
     """_summary_
 
     Args:
         func_BAO (function): BAO_flat
         paraminit (array): _description_
-        BAOdata (DataFrame): _description_
         nstep (int): _description_
         normal_vec (array): _description_
         prior (array): _description_
@@ -144,7 +150,7 @@ def MCMC_BAO(func_BAO, paraminit,BAOdata, nstep,normal_vec,prior): # param0 = [H
     stepsize = normal_vec
     for k in tqdm(range(nstep)):
         paramNew = np.array(paramOld + np.random.normal(0,stepsize))
-        paramOld, loglikelihood = Markov_BAO(func_BAO, paramOld, paramNew,BAOdata, prior, lnprior) #loglikelihood = -chisq
+        paramOld, loglikelihood = Markov_BAO(func_BAO, paramOld, paramNew, prior, lnprior) #loglikelihood = -chisq
         col = np.hstack((paramOld, loglikelihood))
         arr[:,k] = col
     return arr

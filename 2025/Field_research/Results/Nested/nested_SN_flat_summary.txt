@@ -1,7 +1,7 @@
-niter: 1740
-ncall: 2628
-nsamples: 1940
-logz: -1657.008 +/-  0.185
-h:  6.855
-logzerr : 0.18514134692262982
+niter: 1722
+ncall: 2611
+nsamples: 1922
+logz: -1656.917 +/-  0.183
+h:  6.703
+logzerr : 0.18306518032092461
  Best-fit paramters : Omegam = 0.999 +/- 0.001

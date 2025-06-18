@@ -17,7 +17,7 @@ import utils_nested as un
 print("Sampling SN flat cosmology...")
 result_SN_flat = nestle.sample(un.Loglikelihood_SN_flat, un.prior_SN_flat, 1, method='single', npoints=200, callback = nestle.print_progress)
 # saving the result
-print("Saving SN flat cosmology result...")
+print("\nSaving SN flat cosmology result...")
 with open(Field_research_dir + '/Results/Nested/nested_SN_flat_result.pkl', 'wb') as f:
     pickle.dump(result_SN_flat, f)
 p, cov = nestle.mean_and_cov(result_SN_flat.samples, result_SN_flat.weights)
@@ -34,10 +34,10 @@ fig.savefig(Field_research_dir + '/Figs/nested_SN_flat.png', dpi=300)
 
 
 # 1-2. curved cosmology
-print("Sampling SN curved cosmology...")
+print("\nSampling SN curved cosmology...")
 result_SN_curved = nestle.sample(un.Loglikelihood_SN_curved, un.prior_SN_curved, 2, method='single', npoints=200, callback = nestle.print_progress)
 # saving the result
-print("Saving SN curved cosmology result...")
+print("\nSaving SN curved cosmology result...")
 with open(Field_research_dir + '/Results/Nested/nested_SN_curved_result.pkl', 'wb') as f:
     pickle.dump(result_SN_curved, f)
 p, cov = nestle.mean_and_cov(result_SN_curved.samples, result_SN_curved.weights)
@@ -52,10 +52,10 @@ fig2.savefig(Field_research_dir + '/Figs/nested_SN_curved.png', dpi=300)
 
 # 2. BAO only data
 # 2-1. flat cosmology
-print("Sampling BAO flat cosmology...")
+print("\nSampling BAO flat cosmology...")
 result_BAO_flat = nestle.sample(un.Loglikelihood_BAO_flat, un.prior_BAO_flat, 2, method='single', npoints=200, callback = nestle.print_progress)
 # saving the result
-print("Saving BAO flat cosmology result...")
+print("\nSaving BAO flat cosmology result...")
 with open(Field_research_dir + '/Results/Nested/nested_BAO_flat_result.pkl', 'wb') as f:
     pickle.dump(result_BAO_flat, f)
 p, cov = nestle.mean_and_cov(result_BAO_flat.samples, result_BAO_flat.weights)
@@ -69,10 +69,10 @@ fig3.tight_layout()
 fig3.savefig(Field_research_dir + '/Figs/nested_BAO_flat.png', dpi=300)
 
 # 2-2. curved cosmology
-print("Sampling BAO curved cosmology...")
+print("\nSampling BAO curved cosmology...")
 result_BAO_curved = nestle.sample(un.Loglikelihood_BAO_curved, un.prior_BAO_curved, 3, method='single', npoints=1000, callback = nestle.print_progress) 
 # saving the result
-print("Saving BAO curved cosmology result...")
+print("\nSaving BAO curved cosmology result...")
 with open(Field_research_dir + '/Results/Nested/nested_BAO_curved_result.pkl', 'wb') as f:
     pickle.dump(result_BAO_curved, f)
 p, cov = nestle.mean_and_cov(result_BAO_curved.samples, result_BAO_curved.weights)
@@ -88,10 +88,10 @@ fig4.savefig(Field_research_dir + '/Figs/nested_BAO_curved.png', dpi=300)
 
 # 3. SN + BAO data
 # 3-1. flat cosmology
-print("Sampling SN + BAO flat cosmology...")
+print("\nSampling SN + BAO flat cosmology...")
 result_SN_BAO_flat = nestle.sample(un.Loglikelihood_SN_BAO_flat, un.prior_SN_BAO_flat, 2, method='single', npoints=200, callback = nestle.print_progress)
 # saving the result
-print("Saving SN + BAO flat cosmology result...")
+print("\nSaving SN + BAO flat cosmology result...")
 with open(Field_research_dir + '/Results/Nested/nested_SN_BAO_flat_result.pkl', 'wb') as f:
     pickle.dump(result_SN_BAO_flat, f)
 p, cov = nestle.mean_and_cov(result_SN_BAO_flat.samples, result_SN_BAO_flat.weights)
@@ -106,10 +106,10 @@ fig5.tight_layout()
 fig5.savefig(Field_research_dir + '/Figs/nested_SNBAO_flat.png', dpi=300)
 
 # 3-2. curved cosmology
-print("Sampling SN + BAO curved cosmology...")
+print("\nSampling SN + BAO curved cosmology...")
 result_SN_BAO_curved = nestle.sample(un.Loglikelihood_SN_BAO_curved, un.prior_SN_BAO_curved, 3, method='single', npoints=1000, callback = nestle.print_progress)
 # saving the result
-print("Saving SN + BAO curved cosmology result...")
+print("\nSaving SN + BAO curved cosmology result...")
 with open(Field_research_dir + '/Results/Nested/nested_SN_BAO_curved_result.pkl', 'wb') as f:
     pickle.dump(result_SN_BAO_curved, f)
 p, cov = nestle.mean_and_cov(result_SN_BAO_curved.samples, result_SN_BAO_curved.weights)
