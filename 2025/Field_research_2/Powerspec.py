@@ -4,8 +4,10 @@ class EisensteinHu:
     def __init__(self, **kwargs):
         self.name = "Eisenstein-Hu"
         default_params = {
-            'ombh2': 0.044,
-            'omch2': 0.122,
+            'ombh2': 0.02242,
+            'omch2': 0.11933,
+            'omlambh2' : 0.6889,
+            'omRh2': 0.0,
             'h': 0.67,
             'mnu': 0.0,
             'ns': 0.965,
@@ -18,7 +20,11 @@ class EisensteinHu:
         self.params = default_params
 
         self.om0h2 = self.ombh2 + self.omch2
-        self.f_baryon = self.ombh2/self.om0h2
+        self.om0 = self.om0h2 / self.h**2
+        self.omlamb = self.omlambh2 / self.h**2
+        self.omb = self.ombh2 / self.h**2
+        self.omc = self.omch2 / self.h**2
+        self.f_baryon = self.omb/self.om0
         self.theta = self.TCMB/2.7
         self.zeq = 2.5*1e4 * self.om0h2 * (self.theta)**-4
         self.keq = 7.46*1e-2 * self.om0h2*(self.theta)**-2 # in Mpc^-1
@@ -59,7 +65,7 @@ class EisensteinHu:
             print(f"{key}: {value}")
         return self.params
     
-    def Transfer_function_eff(self,k):
+    def Transfer_function_small_scale(self,k):
         q = k/(13.41*self.keq) # [10]
         ks = k*self.s
         T_c = self.alpha_c * np.log(18*self.beta_c*q) / (14.2*q**2) # [9]
@@ -86,16 +92,73 @@ class EisensteinHu:
         # Total Transfer function
         T_k = self.f_baryon*T_b + (1-self.f_baryon)*T_c # [16]
         return T_k
-    def oscillation(self):
+    def first_peak(self):
         s = 44.5 * np.log(9.83 / self.om0h2) / np.sqrt(1 + 10 * self.ombh2**3/4) # in Mpc [26]
         k_peak = 5* np.pi / (2*s) * (1 + 0.217 * self.om0h2) # in Mpc^-1 [25]
         return k_peak
-    def Transfer_function_eff(self, k):
-        self.gamma = self.om0h2/self.h
-        q = k * self.theta**2
+    def Transfer_function_zero_baryon(self, k):
+        k_in_hMpc = k * self.h
+        self.gamma = self.om0h2
+        q = k_in_hMpc * self.theta**2 / self.gamma # use k in h Mpc^-1
         def L0(q): # [29]
             return np.log(2*np.e + 1.8*q)
         def C0(q): # [30]
             return 14.2 + 731./(1+62.5*q)
         T0 = L0(q)/ (L0(q) + C0(q)*q**2) # [28]
         return T0
+    
+    def Transfer_function_nowiggles(self, k):
+        ks = k*self.s
+        alpha_gamma = 1 - 0.328 * np.log(431*self.om0h2) * self.f_baryon + 0.38 * np.log(22.3*self.om0h2) * self.f_baryon**2 # [31]
+        gamma_eff = self.om0h2/self.h * (alpha_gamma + (1 - alpha_gamma) / (1 + (0.43*ks)**4)) # [30]
+        k_in_hMpc = k * self.h
+        q = k_in_hMpc * self.theta**2 / gamma_eff
+        def L0(q): # [29]
+            return np.log(2*np.e + 1.8*q)
+        def C0(q): # [30]
+            return 14.2 + 731./(1+62.5*q)
+        T0 = L0(q)/ (L0(q) + C0(q)*q**2) # [29]
+        return T0
+
+
+    def Growth_factor(self, z):
+        def Omega_m_z(z):
+            return self.om0h2 * (1+z)**3 / (self.omlambh2 + self.omRh2*(1+z)**2 + self.om0h2*(1+z)**3) # [A5]
+        def Omega_lamb_z(z):
+            return self.omlambh2 / (self.omlambh2 + self.omRh2*(1+z)**2 + self.om0h2*(1+z)**3) # [A6]
+        def D_1(z): # [A4]
+            Omz = Omega_m_z(z)
+            Olambz = Omega_lamb_z(z)
+            return (5*Omz/2) / ( Omz**(4/7) - Olambz + (1 + Omz/2)*(1 + Olambz/70) ) / (1+z)
+        return(D_1(z))
+    def Power_spectrum_0(self,k):
+        A = self.As * (k/0.05)**(self.ns - 1)
+        T_k = self.Transfer_function(k)
+        speed_of_light = 299792.458 # in km/s
+        H0 = self.h * 100 # in km/s/Mpc
+        ntilde = self.ns-1
+        if self.omlambh2 == 0:
+            delta_H = 1.95 * 1e-5 * self.om0**(-0.35-0.19*np.log(self.om0)-0.17*ntilde) * np.exp(-ntilde-0.14*ntilde**2) # [A2]
+            
+        else:
+            delta_H = 1.94 * 1e-5 * self.om0**(-0.785-0.05*np.log(self.om0)) * np.exp(-0.95*ntilde-0.169*ntilde**2) # [A2]
+        P_k = 2*np.pi**2/k**3 * delta_H**2 * (speed_of_light*k/H0)**(3+ self.ns) * T_k**2
+        return P_k
+    def Power_spectrum_z(self,k,z):
+        P_k_0 = self.Power_spectrum_0(k)
+        D1_z = self.Growth_factor(z)
+        return P_k_0 * D1_z**2
+    def Power_spectrum_dimensionless(self,k):
+        P_k_0 = self.Power_spectrum_0(k)
+        return k**3 * P_k_0 / (2*np.pi**2)
+    def Sigma_R(self,R):
+        def j1(x):
+            return (x*np.cos(x) - np.sin(x))/x**2
+        def integrand(k):
+            x = k*R
+            W = 3*j1(x)/x
+            P_k_dimless = self.Power_spectrum_dimensionless(k)
+            return 1/k * P_k_dimless * W**2
+        karr = np.logspace(-10, 10, 1000)
+        integral = np.trapz(integrand(karr), karr) # [A7]
+        return integral
