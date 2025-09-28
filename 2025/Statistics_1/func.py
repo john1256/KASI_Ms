@@ -27,3 +27,9 @@ def skewness(data):
 def kurtosis(data):
     mu = mean(data)
     return mean((data - mu)**4) / (variance(data)**2) - 3
+def weighted_mean(data, stds):
+    weights = 1/stds**2
+    return np.sum(data*weights)/np.sum(weights)
+def weighted_std(stds):
+    weights = 1/stds**2
+    return np.sqrt(1/np.sum(weights))
