@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.integrate as spi
 
 class EisensteinHu:
     def __init__(self, **kwargs):
@@ -134,7 +135,7 @@ class EisensteinHu:
     def Power_spectrum_0(self,k):
         A = self.As * (k/0.05)**(self.ns - 1)
         T_k = self.Transfer_function(k)
-        speed_of_light = 299792.458 # in km/s
+        self.speed_of_light = 299792.458 # in km/s
         H0 = self.h * 100 # in km/s/Mpc
         ntilde = self.ns-1
         if self.omlambh2 == 0:
@@ -142,23 +143,51 @@ class EisensteinHu:
             
         else:
             delta_H = 1.94 * 1e-5 * self.om0**(-0.785-0.05*np.log(self.om0)) * np.exp(-0.95*ntilde-0.169*ntilde**2) # [A2]
-        P_k = 2*np.pi**2/k**3 * delta_H**2 * (speed_of_light*k/H0)**(3+ self.ns) * T_k**2
+        P_k = 2*np.pi**2/k**3 * delta_H**2 * (self.speed_of_light*k/H0)**(3+ self.ns) * T_k**2
         return P_k
     def Power_spectrum_z(self,k,z):
         P_k_0 = self.Power_spectrum_0(k)
         D1_z = self.Growth_factor(z)
         return P_k_0 * D1_z**2
-    def Power_spectrum_dimensionless(self,k):
-        P_k_0 = self.Power_spectrum_0(k)
+    def Power_spectrum_dimensionless(self,P_k_0,k):
+        """
+        Input : P_k_0 : Power spectrum at z=0
+        """
         return k**3 * P_k_0 / (2*np.pi**2)
-    def Sigma_R(self,R):
+    def Sigma_R2(self,P_k_dimless,karr, R):
+        """
+        Input : P_k_dimless : Dimensionless power spectrum at z=0
+        """
         def j1(x):
             return (x*np.cos(x) - np.sin(x))/x**2
         def integrand(k):
             x = k*R
             W = 3*j1(x)/x
-            P_k_dimless = self.Power_spectrum_dimensionless(k)
             return 1/k * P_k_dimless * W**2
-        karr = np.logspace(-10, 10, 1000)
         integral = np.trapz(integrand(karr), karr) # [A7]
         return integral
+    def Power_spectrum_liddle(self, a, k, Transfer = 'EisensteinHu', rescale = False):
+        """ Using a definition from Liddle & Lyth Cosmological Inflation and Large-Scale Structure (2000)
+        """
+        P_primodial = self.As * (k/0.05)**(self.ns - 1)
+        H0 = self.h * 100 # in km/s/Mpc
+        if Transfer == 'EisensteinHu':
+            T_k = self.Transfer_function(k)
+        elif Transfer == 'ZeroBaryon':
+            T_k = self.Transfer_function_zero_baryon(k)
+        elif Transfer == 'NoWiggles':
+            T_k = self.Transfer_function_nowiggles(k)
+        Hubble = H0 * np.sqrt(self.om0/a**3 + self.omlamb)
+        D1 = 5/2 * self.om0 * H0**2 * Hubble * spi.quad(lambda a: 1/(a*Hubble)**3,0,a)[0] # [6.10]
+        #D1 = 5/2 * (1/70 + 209*self.om0/140 - self.om0**2/140 + self.om0**(4/7))**-1 / a # [6.12]
+        P_k = 4/25 * (k * self.speed_of_light / (a*Hubble))**4 * P_primodial * T_k**2 * D1**2/a**2 # [6.14]
+
+        if rescale == True:
+            P_k_dimless = self.Power_spectrum_dimensionless(P_k, k)
+            
+            sigma8 = self.Sigma_R2(P_k_dimless, k, 8)
+            print("Rescaling power spectrum... sigma8 =", sigma8**0.5)
+            True_sigma82 = 0.811**2
+            P_k = P_k * True_sigma82/sigma8
+
+        return P_k 
