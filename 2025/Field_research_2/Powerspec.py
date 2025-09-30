@@ -180,7 +180,7 @@ class EisensteinHu:
         Hubble = H0 * np.sqrt(self.om0/a**3 + self.omlamb)
         D1 = 5/2 * self.om0 * H0**2 * Hubble * spi.quad(lambda a: 1/(a*Hubble)**3,0,a)[0] # [6.10]
         #D1 = 5/2 * (1/70 + 209*self.om0/140 - self.om0**2/140 + self.om0**(4/7))**-1 / a # [6.12]
-        P_k = 4/25 * (k * self.speed_of_light / (a*Hubble))**4 * P_primodial * T_k**2 * D1**2/a**2 # [6.14]
+        P_k = 4/25 * k * self.speed_of_light**4 / (2*np.pi**2) / (a*Hubble)**4 * P_primodial * T_k**2 * D1**2/a**2 # [6.14]
 
         if rescale == True:
             P_k_dimless = self.Power_spectrum_dimensionless(P_k, k)
