@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.special import gamma
+from scipy.integrate import quad
 
 def mean(data):
     return np.sum(data)/len(data)
@@ -33,3 +35,11 @@ def weighted_mean(data, stds):
 def weighted_std(stds):
     weights = 1/stds**2
     return np.sqrt(1/np.sum(weights))
+
+def Chisq_pdf(chisq, n):
+    chi = np.sqrt(chisq)
+    prob = 2**(-n/2)/gamma(n/2)*chi**(n-2)*np.exp(-chisq/2)
+    return prob
+def Chisq_integral(chisq, n):
+    result, _ = quad(Chisq_pdf, chisq, np.inf, args = (n,))
+    return result
