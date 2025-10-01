@@ -99,7 +99,7 @@ class EisensteinHu:
         return k_peak
     def Transfer_function_zero_baryon(self, k):
         k_in_hMpc = k * self.h
-        self.gamma = self.om0h2
+        self.gamma = self.om0h2 / self.h
         q = k_in_hMpc * self.theta**2 / self.gamma # use k in h Mpc^-1
         def L0(q): # [29]
             return np.log(2*np.e + 1.8*q)
@@ -122,7 +122,7 @@ class EisensteinHu:
         return T0
 
 
-    def Growth_factor(self, z):
+    def Growth_factor(self, z): 
         def Omega_m_z(z):
             return self.om0h2 * (1+z)**3 / (self.omlambh2 + self.omRh2*(1+z)**2 + self.om0h2*(1+z)**3) # [A5]
         def Omega_lamb_z(z):
@@ -168,6 +168,7 @@ class EisensteinHu:
         return integral
     def Power_spectrum_liddle(self, a, k, Transfer = 'EisensteinHu', rescale = False):
         """ Using a definition from Liddle & Lyth Cosmological Inflation and Large-Scale Structure (2000)
+        dimension : [Mpc^3] if k is in [Mpc^-1], [Mpc^3/h^3] if k is in kh [h Mpc^-1]
         """
         P_primodial = self.As * (k/0.05)**(self.ns - 1)
         H0 = self.h * 100 # in km/s/Mpc
