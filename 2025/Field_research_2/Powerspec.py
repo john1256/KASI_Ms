@@ -94,7 +94,7 @@ class EisensteinHu:
         T_k = self.f_baryon*T_b + (1-self.f_baryon)*T_c # [16]
         return T_k
     def first_peak(self):
-        s = 44.5 * np.log(9.83 / self.om0h2) / np.sqrt(1 + 10 * self.ombh2**3/4) # in Mpc [26]
+        s = 44.5 * np.log(9.83 / self.om0h2) / np.sqrt(1 + 10 * self.ombh2**(3/4)) # in Mpc [26]
         k_peak = 5* np.pi / (2*s) * (1 + 0.217 * self.om0h2) # in Mpc^-1 [25]
         return k_peak
     def Transfer_function_zero_baryon(self, k):
@@ -110,10 +110,9 @@ class EisensteinHu:
     
     def Transfer_function_nowiggles(self, k):
         ks = k*self.s
-        alpha_gamma = 1 - 0.328 * np.log(431*self.om0h2) * self.f_baryon + 0.38 * np.log(22.3*self.om0h2) * self.f_baryon**2 # [31]
+        alpha_gamma = 1 - (0.328 * np.log(431*self.om0h2) * self.f_baryon) + (0.38 * np.log(22.3*self.om0h2) * self.f_baryon**2) # [31]
         gamma_eff = self.om0h2/self.h * (alpha_gamma + (1 - alpha_gamma) / (1 + (0.43*ks)**4)) # [30]
-        k_in_hMpc = k * self.h
-        q = k_in_hMpc * self.theta**2 / gamma_eff
+        q = k/self.h * self.theta**2 / gamma_eff
         def L0(q): # [29]
             return np.log(2*np.e + 1.8*q)
         def C0(q): # [30]
