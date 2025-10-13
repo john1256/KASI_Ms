@@ -30,10 +30,6 @@ for i in range(len(data)):
     with open(f'best_fit_{i+1}.txt', 'w') as f:
         for j in range(len(theory)):
             print(f'Trying data {i+1} with model {j+1}')
-            if j == 1:
-                init_parm = set_init_point(theory2[j], data[i],3)
-            else:
-                init_parm = set_init_point(theory2[j], data[i],2)
-            Th_parm, Th_chi2=Regression(theory[j], xarr, yarr, init_parm, sig_yarr, max_iter=1e10, learning_rate=1.)
+            Th_parm, Th_chi2=Regression(theory[j],theory2[j], data[i], 3 if j == 1 else 2, max_iter=1e10, learning_rate=1.)
             f.write(f'Model{j+1} {Th_parm} {Th_chi2}\n')
             

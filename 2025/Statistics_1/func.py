@@ -91,37 +91,64 @@ def chi2_grid(*args):
     return chi2_grid_val
 
 
-def set_init_point(model, data, parmnum):
+def M1(x, parm):
+    return parm[0]*x + x**parm[1] + 1
+def M2(x, parm):
+    return parm[0] * np.tanh(x - parm[1]) + parm[2]
+def M3(x, parm):
+    return parm[0]*x * (np.sin(x) + parm[1]) + 1
+def M4(x, parm):
+    return parm[0] + parm[1]*(1 + x)
+def M5(x, parm):
+    return np.sqrt(parm[0] * (1 + x)**3 + parm[1])
+
+
+
+def set_init_grid(model_test, data, parmnum):
     if parmnum == 2:
-        A, B = np.linspace(-10,10,100), np.linspace(-10,10,100)
+        A, B = np.linspace(-9,9,10), np.linspace(-9,9,10)
         Agrid, Bgrid = np.meshgrid(A, B)
-        perturb = np.random.uniform(-0.05,0.05, size=Agrid.shape)
-        Agrid += perturb; Bgrid += perturb
+        perturb = np.random.uniform(-0.1,0.1, size=Agrid.shape)
         
-        chi2_values = chi2_grid(model, data, Agrid, Bgrid)
+        Agrid += perturb; Bgrid += perturb
+
+        chi2_values = chi2_grid(model_test, data, Agrid, Bgrid)
         notnan = ~np.isnan(chi2_values)
         chi2_nan = chi2_values[notnan]; Agrid_nan = Agrid[notnan]; Bgrid_nan = Bgrid[notnan]
-        min_chi2 = chi2_nan.min()
-        id_mask = (chi2_nan == min_chi2)
-        A = Agrid_nan[id_mask][0]; B = Bgrid_nan[id_mask][0]
-        parm = np.array([A, B])
+        sort_indices = np.argsort(chi2_nan)
+        sorted_Agrid = Agrid_nan[sort_indices]
+        sorted_Bgrid = Bgrid_nan[sort_indices]
+ 
+        final_parm = np.array([sorted_Agrid, sorted_Bgrid]).T
+        random_idx = np.random.randint(0,9)
+        parm = final_parm[random_idx]
+        final_choice = [np.random.uniform(parm[0]-0.9, parm[0]+0.9), np.random.uniform(parm[1]-0.9, parm[1]+0.9)]
     elif parmnum == 3:
-        A, B, C = np.linspace(-10,10,50), np.linspace(-10,10,50), np.linspace(-10,10,50)
+        A, B, C = np.linspace(-9,9,10), np.linspace(-9,9,10), np.linspace(-9,9,10)
         Agrid, Bgrid, Cgrid = np.meshgrid(A, B, C)
-        perturb = np.random.uniform(-0.05,0.05, size=Agrid.shape)
+        perturb = np.random.uniform(-0.1,0.1, size=Agrid.shape)
         Agrid += perturb; Bgrid += perturb; Cgrid += perturb
-        chi2_values = chi2_grid(model, data, Agrid, Bgrid, Cgrid)
+        chi2_values = chi2_grid(model_test, data, Agrid, Bgrid, Cgrid)
         notnan = ~np.isnan(chi2_values)
         chi2_nan = chi2_values[notnan]; Agrid_nan = Agrid[notnan]; Bgrid_nan = Bgrid[notnan]; Cgrid_nan = Cgrid[notnan]
-        min_chi2 = chi2_nan.min()
-        id_mask = (chi2_nan == min_chi2)
-        A = Agrid_nan[id_mask][0]; B = Bgrid_nan[id_mask][0]; C = Cgrid_nan[id_mask][0]
-        parm = np.array([A, B, C])
-    print(parm)
-    return parm
+        sort_indices = np.argsort(chi2_nan)
+        sorted_Agrid = Agrid_nan[sort_indices]
+        sorted_Bgrid = Bgrid_nan[sort_indices]
+        sorted_Cgrid = Cgrid_nan[sort_indices]
 
-def Regression(func, x, y, init_parm, sig_y, max_iter=1000, learning_rate=1.):
+        final_parm = np.array([sorted_Agrid, sorted_Bgrid, sorted_Cgrid]).T
+        random_idx = np.random.randint(0,9)
+        parm = final_parm[random_idx]
+        final_choice = [np.random.uniform(parm[0]-0.9, parm[0]+0.9), np.random.uniform(parm[1]-0.9, parm[1]+0.9), np.random.uniform(parm[2]-0.9, parm[2]+0.9)]
+
+    return np.array(final_choice)
+
+def Regression(func,func_test, data, parmnum,max_iter=1000, learning_rate=1.):
     go=True
+    init_parm = set_init_grid(func_test, data, parmnum)
+    x = data[:,0]
+    y = data[:,1]
+    sig_y = data[:,2]
     print("Initial parameters:", init_parm)
     init_grad_like = _grad_like(func, x, y, sig_y, init_parm)
     init_grad_like_mag = np.sqrt(np.sum(init_grad_like**2))
@@ -132,7 +159,10 @@ def Regression(func, x, y, init_parm, sig_y, max_iter=1000, learning_rate=1.):
     perturb_count = 0
     parm_history = []
     chi2_history = []
-    while go==True and max_iter > 0 and (old_parm >=-10).all() and (old_parm <=10).all():
+    while go==True and max_iter > 0:
+        if (old_parm <=-10).all() and (old_parm >=10).all():
+            print('out of bounds, perturbing...')
+            old_parm = set_init_grid(func_test, data, parmnum)
         max_iter -= 1
         try: # chi2_new should be smaller than chi2_old
             chi2_old = chi2(func, x, y, sig_y, old_parm)
@@ -148,14 +178,16 @@ def Regression(func, x, y, init_parm, sig_y, max_iter=1000, learning_rate=1.):
                     print("Perturbation limit reached.")
                     go = False
                     continue
-                perturb_amount = np.random.uniform(-1., 1., size=len(old_parm))
-                old_parm = np.clip(old_parm + perturb_amount, -10, 10)
+                #perturb_amount = np.random.uniform(-1., 1., size=len(old_parm))
+                #old_parm = np.clip(old_parm + perturb_amount, -10, 10)
+                perturb_parm = set_init_grid(func_test, data, parmnum)
+                old_parm = perturb_parm
                 perturb_count += 1
             else:
                 old_parm = new_parm
         except (ValueError, FloatingPointError) as e:
             print(f"Calculation error ({e}). Perturbing...")
-            new_val = np.random.uniform(-3, 3, size=len(old_parm))
+            new_val = set_init_grid(func_test, data, parmnum)
             old_parm = new_val
         if max_iter ==0:
             print("Maximum iteration reached.")
@@ -257,9 +289,9 @@ def plot_contour(*args, **kwargs):
         fig, ax = plt.subplots(figsize=(7,6))
         for i in range(len(delta_chi2)):
             if i==0:
-                chi2_bool = chi2_vals < new_chi2_min + delta_chi2[i]
+                chi2_bool = chi2_vals < min_chi2 + delta_chi2[i]
             else:
-                chi2_bool = (chi2_vals > delta_chi2[i-1]) & (chi2_vals < new_chi2_min + delta_chi2[i])
+                chi2_bool = (chi2_vals > delta_chi2[i-1]) & (chi2_vals < min_chi2 + delta_chi2[i])
             A_masked = Amesh[chi2_bool]; B_masked = Bmesh[chi2_bool]; z_masked = chi2_vals[chi2_bool]
             np.save(f'./Assignment5/data/cont_{modelname}_{dataname}_{i}.npy', np.array([A_masked, B_masked, z_masked]))
             pts = np.c_[A_masked, B_masked]
