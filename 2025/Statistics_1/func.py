@@ -243,6 +243,7 @@ def plot_contour(*args, **kwargs):
     conf_lvl = ['68%', '95%', '99%']
     
     if len(parms) == 2:
+        print(f'Initial parameters: {parms}')
         Agrid = grid_total[0] + parms[0]
         Bgrid = grid_total[1] + parms[1]
         Amesh, Bmesh = np.meshgrid(Agrid, Bgrid)
@@ -255,7 +256,10 @@ def plot_contour(*args, **kwargs):
         print(f'Min chi2: {min_chi2}')
         fig, ax = plt.subplots(figsize=(7,6))
         for i in range(len(delta_chi2)):
-            chi2_bool = chi2_vals < min_chi2 + delta_chi2[i]
+            if i==0:
+                chi2_bool = chi2_vals < new_chi2_min + delta_chi2[i]
+            else:
+                chi2_bool = (chi2_vals > delta_chi2[i-1]) & (chi2_vals < new_chi2_min + delta_chi2[i])
             A_masked = Amesh[chi2_bool]; B_masked = Bmesh[chi2_bool]; z_masked = chi2_vals[chi2_bool]
             np.save(f'./Assignment5/data/cont_{modelname}_{dataname}_{i}.npy', np.array([A_masked, B_masked, z_masked]))
             pts = np.c_[A_masked, B_masked]
@@ -270,9 +274,10 @@ def plot_contour(*args, **kwargs):
         plt.savefig(f'./Assignment5/figs/contour_{modelname}_{dataname}')
         return min_chi2, parms_new
     elif len(parms) == 3:
-        Amesh = make_grid(5,steps=100)/100+parms[0]
-        Bmesh = make_grid(5,steps=100)/100+parms[1]
-        Cmesh = make_grid(5,steps=100)/100+parms[2]
+        print(f'Initial parameters: {parms}')
+        Amesh = grid_total[0] + parms[0]
+        Bmesh = grid_total[1] + parms[1]
+        Cmesh = grid_total[2] + parms[2]
         X,Y,Z = np.meshgrid(Amesh, Bmesh, Cmesh)
         chi2_vals = chi2_grid(model, data, X, Y, Z)
         new_chi2_min= np.min(chi2_vals)
@@ -284,7 +289,10 @@ def plot_contour(*args, **kwargs):
         delta_chi2_full = [chi2.ppf(0.68, 3), chi2.ppf(0.95, 3), chi2.ppf(0.99, 3)]
         print('saving full 3d contours')
         for i in range(len(delta_chi2_full)):
-            chi2_bool = chi2_vals < new_chi2_min + delta_chi2_full[i]
+            if i==0:
+                chi2_bool = chi2_vals < new_chi2_min + delta_chi2_full[i]
+            else:
+                chi2_bool = (chi2_vals > delta_chi2_full[i-1]) & (chi2_vals < new_chi2_min + delta_chi2_full[i])
             X_masked = X[chi2_bool]; Y_masked = Y[chi2_bool]; Z_masked = Z[chi2_bool]; chi2_masked = chi2_vals[chi2_bool]
             np.save(f'./Assignment5/data/cont_{modelname}_{dataname}_{i}.npy', np.array([X_masked, Y_masked, Z_masked, chi2_masked]))
         Agrid = grid_total[0] + parms_new[0]
