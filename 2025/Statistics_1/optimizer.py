@@ -44,18 +44,18 @@ def chisq_min(func, data, dof, precision=3):
     center_x, center_y,center_z = 0, 0,0
     if dof==2:
         for i in range(precision+1):
-            X,Y = make_grids(center_x, center_y, [10**(-i+1),10**(-i+1)])
+            X,Y = make_grids(center_x, center_y, [(i+1)*10**(-i+1),(i+1)*10**(-i+1)], num_points = 81)
             chi_sq = chi2_grid(func, data, X,Y)
-            min_idx = chi_sq.argmin()
+            min_idx = np.nanargmin(chi_sq)
             chi_sq_min = chi_sq.flatten()[min_idx]
             center_x = X.flatten()[min_idx]
             center_y = Y.flatten()[min_idx]
         return  center_x, center_y, chi_sq_min
     elif dof==3:
         for i in range(precision+1):
-            X,Y,Z = make_grids(center_x, center_y, center_z, [10**(-i+1),10**(-i+1),10**(-i+1)])
+            X,Y,Z = make_grids(center_x, center_y, center_z, [10**(-i+1),10**(-i+1),2*10**(-i+1)], num_points = 81)
             chi_sq = chi2_grid(func, data, X,Y,Z)
-            min_idx = chi_sq.argmin()
+            min_idx = np.nanargmin(chi_sq)
             center_x = X.flatten()[min_idx]
             center_y = Y.flatten()[min_idx]
             center_z = Z.flatten()[min_idx]
